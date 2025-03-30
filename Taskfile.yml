@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  build:
+    dir: '.'
+    cmds:
+      - cargo build --release --target wasm32-unknown-unknown
+      - base64 -w 0 target/wasm32-unknown-unknown/release/sl_derive.wasm > wasm_base64.txt
+      - cp wasm_base64.txt test-app/assets/

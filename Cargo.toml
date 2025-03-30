@@ -1,0 +1,15 @@
+[package]
+name = "sl-derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = "1.0.48"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
