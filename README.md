@@ -1,8 +1,8 @@
-# SL-Derive Template
+# Sl-Derive - DS1 current location
 ## Abstract
-Template repo, for creating user-supplied wasm-functions for the soulslike-routing project.
-Also includes a small webapp for testing purposes, where you can check, if your derive function
-works / does what you think it does relatively easy.
+Example repo, showing the gist of how user-supplied wasm-functions can be created for the soulslike-routing project.
+
+This example covers a `deriveCurrentLocation` function for Dark Souls: Remastered.
 
 ## About derive functions
 So called derive functions are supplied by the user when modeling a game.
@@ -14,5 +14,15 @@ To not overcomplicate the game-agnostic nature of the SLR-toolchain, I decided f
 kind of functions is to be supplied by the user in the form of small wasm functions when modeling
 the game.
 
-## Notes
- - Be careful when changing the package name in Cargo.toml, it is currently hardcoded in a few commands. Check the Taskfile if your plan on using it!
+## Interface
+To make interfacing with these kinds of functions, they have a pretty rigid interface you have
+to follow when writing them:
+At the moment, each function takes the same inputs, consisting of:
+- The active spec
+- The active model
+- The state before this tick
+- The state-updates we could already get in this tick.
+
+The functions should then load and parse those objects if needed, compute the new state,
+which is probably always a foreign id (uuid) and then also store that in a Memory object, which
+is then returned to the javascript caller.

@@ -1,14 +1,37 @@
 // Insert your values for testing purposes:
 
 const spec = {};
-const model = {};
-const stateAsItWasBeforeAtTheStartOfThisTick = {};
+const model = {/* left out for brevity */};
+const stateAsItWasBeforeAtTheStartOfThisTick = {
+    player: {
+        position: {
+            x: {
+                value: -52
+            },
+            y: {
+                value: -59,
+            },
+            z: {
+                value: 55
+            }
+        }
+    },
+    currentLocation: {
+        value: "7e97d14d-770b-44d8-920b-4bea1b8079d7"
+    }
+};
 const alreadyUpdatedStateDuringThisTick = {
     player: {
         position: {
-            x: -52,
-            y: -59,
-            z: 55
+            x: {
+                value: -52
+            },
+            y: {
+                value: -59,
+            },
+            z: {
+                value: 55
+            }
         }
     }
 }
