@@ -13,7 +13,7 @@ static MODEL: OnceCell<Value> = OnceCell::new();
 // Edit this function
 #[no_mangle]
 pub fn derive(spec: &Value, model: &Value, state: &Value, already_updated_state_this_tick: &Value) -> String {
-    let radius_to_check_in_around_player: f64 = 4.0;
+    let radius_to_check_in_around_player: f64 = 2.0;
     let point_radius: f64 = 0.5;
 
     // prep: Compute distances for all points, in respect to their radius
