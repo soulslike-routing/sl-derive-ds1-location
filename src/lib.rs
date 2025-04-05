@@ -1,13 +1,18 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use serde_json::Value;
+use once_cell::sync::OnceCell;
+
 
 mod utils;
 
+// global state to optimize some serialization away
+static SPEC: OnceCell<Value> = OnceCell::new();
+static MODEL: OnceCell<Value> = OnceCell::new();
 
 // Edit this function
 #[no_mangle]
-pub fn derive(spec: Value, model: Value, state: Value, already_updated_state_this_tick: Value) -> String {
+pub fn derive(spec: &Value, model: &Value, state: &Value, already_updated_state_this_tick: &Value) -> String {
     let radius_to_check_in_around_player: f64 = 4.0;
     let point_radius: f64 = 0.5;
 
@@ -169,29 +174,24 @@ pub unsafe fn dealloc(ptr: *mut u8, size: usize) {
 
 #[no_mangle]
 pub unsafe fn derive_wrapper(
-    ptr_a: *mut u8, len_a: usize,
-    ptr_b: *mut u8, len_b: usize,
-    ptr_c: *mut u8, len_c: usize,
-    ptr_d: *mut u8, len_d: usize,
+    state_pointer: *mut u8, state_length: usize,
+    update_pointer: *mut u8, update_length: usize,
 ) -> *mut u8 {
-    let data_a = Vec::from_raw_parts(ptr_a, len_a, len_a);
-    let input_str_a = String::from_utf8(data_a).unwrap();
-    let v1: Value = serde_json::from_str(&*input_str_a).expect("couldn't parse json");
+    let state_bytes = Vec::from_raw_parts(state_pointer, state_length, state_length);
+    let state_string = String::from_utf8(state_bytes).unwrap();
+    let parsed_state: Value = serde_json::from_str(&*state_string).expect("couldn't parse state json");
 
-    let data_b = Vec::from_raw_parts(ptr_b, len_b, len_b);
-    let input_str_b = String::from_utf8(data_b).unwrap();
-    let v2: Value = serde_json::from_str(&*input_str_b).expect("couldn't parse json");
-
-    let data_c = Vec::from_raw_parts(ptr_c, len_c, len_c);
-    let input_str_c = String::from_utf8(data_c).unwrap();
-    let v3: Value = serde_json::from_str(&*input_str_c).expect("couldn't parse json");
-
-    let data_d = Vec::from_raw_parts(ptr_d, len_d, len_d);
-    let input_str_d = String::from_utf8(data_d).unwrap();
-    let v4: Value = serde_json::from_str(&*input_str_d).expect("couldn't parse json");
+    let update_bytes = Vec::from_raw_parts(update_pointer, update_length, update_length);
+    let update_string = String::from_utf8(update_bytes).unwrap();
+    let parsed_update: Value = serde_json::from_str(&*update_string).expect("couldn't parse update json");
 
 
-    let derived_result = derive(v1, v2, v3, v4).as_bytes().to_owned();
+    let derived_result = derive(
+        SPEC.get().expect("couldnt unwrap spec global"),
+        MODEL.get().expect("couldnt unwrap model global"),
+        &parsed_state,
+        &parsed_update
+    ).as_bytes().to_owned();
 
 
     let mut raw_bytes = Vec::with_capacity(4 + derived_result.len());
@@ -201,4 +201,21 @@ pub unsafe fn derive_wrapper(
     let ptr = raw_bytes.as_mut_ptr();
     std::mem::forget(raw_bytes);
     ptr
+}
+
+
+#[no_mangle]
+pub unsafe fn derive_setup(
+    spec_pointer: *mut u8, spec_length: usize,
+    model_pointer: *mut u8, model_length: usize,
+) {
+    let spec_bytes = Vec::from_raw_parts(spec_pointer, spec_length, spec_length);
+    let spec_string = String::from_utf8(spec_bytes).unwrap();
+    let parsed_spec: Value = serde_json::from_str(&*spec_string).expect("couldn't parse json");
+    let _ = SPEC.set(parsed_spec);
+
+    let model_bytes = Vec::from_raw_parts(model_pointer, model_length, model_length);
+    let model_string = String::from_utf8(model_bytes).unwrap();
+    let parsed_model: Value = serde_json::from_str(&*model_string).expect("couldn't parse json");
+    let _ = MODEL.set(parsed_model);
 }
