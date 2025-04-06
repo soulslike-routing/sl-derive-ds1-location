@@ -90,27 +90,19 @@ function jsObjectIntoWasmMemory(jsObject, instance) {
 }
 
 function call_wasm_derive(
-    input1,
-    input2,
-    input3,
-    input4,
+    state,
+    update,
     instance
 ) {
-    let input1Struct = jsObjectIntoWasmMemory(input1, instance);
-    let input2Struct = jsObjectIntoWasmMemory(input2, instance);
-    let input3Struct = jsObjectIntoWasmMemory(input3, instance);
-    let input4Struct = jsObjectIntoWasmMemory(input4, instance);
+    let stateMemory = jsObjectIntoWasmMemory(state, instance);
+    let updateMemory = jsObjectIntoWasmMemory(update, instance);
 
     // Actually call into wasm derive
     let pointerToResultStruct = instance.exports.derive_wrapper(
-        input1Struct.ptr,
-        input1Struct.length,
-        input2Struct.ptr,
-        input2Struct.length,
-        input3Struct.ptr,
-        input3Struct.length,
-        input4Struct.ptr,
-        input4Struct.length
+        stateMemory.ptr,
+        stateMemory.length,
+        updateMemory.ptr,
+        updateMemory.length
     );
 
     const resultStruct = readStringWith4PrependedLengthBytes(pointerToResultStruct, instance);
@@ -132,6 +124,14 @@ async function wasm_instance_from_b64_string(b64wasm) {
 (async () => {
     const base64_string = await (await base64_promise).text();
     let wasm_instance = await wasm_instance_from_b64_string(base64_string);
-    const deriveString = call_wasm_derive(spec, modelWithMaps, stateAsItWasBeforeAtTheStartOfThisTick, alreadyUpdatedStateDuringThisTick, wasm_instance);
+    const specPtr = jsObjectIntoWasmMemory(spec, wasm_instance);
+    const modelPtr = jsObjectIntoWasmMemory(modelWithMaps, wasm_instance);
+
+    wasm_instance.exports.derive_setup(
+        specPtr.ptr, specPtr.length,
+        modelPtr.ptr, modelPtr.length
+    );
+
+    const deriveString = call_wasm_derive(stateAsItWasBeforeAtTheStartOfThisTick, alreadyUpdatedStateDuringThisTick, wasm_instance);
     console.log(deriveString);
 })();

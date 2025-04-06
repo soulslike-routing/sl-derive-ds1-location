@@ -14,6 +14,9 @@ To not overcomplicate the game-agnostic nature of the SLR-toolchain, I decided f
 kind of functions is to be supplied by the user in the form of small wasm functions when modeling
 the game.
 
+On the other hand, since you are writing a derive function for a certain spec / model combination, you can and should get
+as specific as possible in your code, to squeeze out as much performance as possible!
+
 ## Interface
 To make interfacing with these kinds of functions, they have a pretty rigid interface you have
 to follow when writing them:
